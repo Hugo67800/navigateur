@@ -1,18 +1,17 @@
 package fr.monnavigateur;
 
+import fr.monnavigateur.net.ClientHttp;
+import fr.monnavigateur.net.ReponseHttp;
 import fr.monnavigateur.net.Url;
 
 public class Main {
-    public static void main(String[] args) {
-        String[] tests = {
-            "https://exemple.com/page?x=1",
-            "http://exemple.com:8080/a/b",
-            "exemple.com",
-            "https://exemple.com?q=test#haut"
-        };
-        for (String t : tests) {
-            Url u = new Url(t);
-            System.out.println(t + "  ->  " + u);
-        }
+    public static void main(String[] args) throws Exception {
+        Url url = new Url("https://example.com");
+        ReponseHttp reponse = ClientHttp.recuperer(url);
+
+        System.out.println("Statut : " + reponse.statut);
+        System.out.println("En-tetes : " + reponse.entetes);
+        System.out.println("Debut du corps :");
+        System.out.println(reponse.corps.substring(0, Math.min(300, reponse.corps.length())));
     }
 }
