@@ -26,7 +26,7 @@ public class ParseurCss {
             if (accoladeFermante < 0) break;
 
             String texteDeclarations = css.substring(accoladeOuvrante + 1, accoladeFermante);
-            List<Declaration> declarations = analyserDeclarations(texteDeclarations);
+            List<Declaration> declarations = analyserDeclarationsPubliques(texteDeclarations);
 
             // Un bloc peut avoir plusieurs sélecteurs séparés par des virgules : p, b { ... }
             for (String s : texteSelecteurs.split(",")) {
@@ -43,7 +43,7 @@ public class ParseurCss {
         return regles;
     }
 
-    private static List<Declaration> analyserDeclarations(String texte) {
+    public static List<Declaration> analyserDeclarationsPubliques(String texte) {
         List<Declaration> declarations = new ArrayList<>();
         for (String partie : texte.split(";")) {
             int deuxPoints = partie.indexOf(':');
