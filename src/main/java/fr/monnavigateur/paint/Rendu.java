@@ -69,7 +69,7 @@ public class Rendu extends JPanel {
         return convertirCouleur(valeur);
     }
 
-    private Color convertirCouleur(String valeur) {
+        private Color convertirCouleur(String valeur) {
         try {
             if (valeur.startsWith("#")) {
                 return Color.decode(valeur);
@@ -80,8 +80,16 @@ public class Rendu extends JPanel {
                 case "red" -> Color.RED;
                 case "green" -> new Color(0, 128, 0);
                 case "blue" -> Color.BLUE;
+                case "darkblue" -> new Color(0, 0, 139);
                 case "gray", "grey" -> Color.GRAY;
+                case "darkgray", "darkgrey" -> Color.DARK_GRAY;
                 case "orange" -> Color.ORANGE;
+                case "yellow" -> Color.YELLOW;
+                case "purple" -> new Color(128, 0, 128);
+                case "pink" -> Color.PINK;
+                case "brown" -> new Color(165, 42, 42);
+                case "cyan" -> Color.CYAN;
+                case "magenta" -> Color.MAGENTA;
                 default -> Color.BLACK;
             };
         } catch (Exception e) {
