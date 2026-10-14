@@ -3,6 +3,7 @@ package fr.monnavigateur.layout;
 import fr.monnavigateur.css.StyleCalcule;
 import fr.monnavigateur.html.Element;
 import fr.monnavigateur.html.Noeud;
+import fr.monnavigateur.html.NoeudTexte;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -23,9 +24,7 @@ public class MiseEnPage {
     public static Boite disposer(Element racine, int largeur, Map<Element, StyleCalcule> styles) {
         BufferedImage image = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = image.createGraphics();
-
         Boite boite = disposerBloc(racine, 0, 0, largeur, styles, g2d);
-
         g2d.dispose();
         return boite;
     }
@@ -50,20 +49,85 @@ public class MiseEnPage {
             }
             boite.hauteur = yCourant - y;
         } else {
-            String texte = element.texteVisible().trim().replaceAll("\\s+", " ");
-            if (!texte.isEmpty()) {
+            List<Mot> mots = extraireMots(element);
+            if (!mots.isEmpty()) {
                 Font police = policeDepuisStyle(boite.style);
                 g2d.setFont(police);
                 FontMetrics fm = g2d.getFontMetrics();
+                int largeurEspace = fm.stringWidth(" ");
 
-                boite.lignes = couperEnLignes(texte, largeur, fm);
-                boite.hauteur = boite.lignes.size() * fm.getHeight();
+                List<String> lignes = new ArrayList<>();
+                List<Lien> liens = new ArrayList<>();
+                StringBuilder ligneActuelle = new StringBuilder();
+                int largeurLigne = 0;
+                int yCourant = y;
+
+                for (Mot mot : mots) {
+                    int largeurMot = fm.stringWidth(mot.texte);
+                    int espacePrefixe = ligneActuelle.length() > 0 ? largeurEspace : 0;
+
+                    if (largeurLigne + espacePrefixe + largeurMot > largeur && ligneActuelle.length() > 0) {
+                        lignes.add(ligneActuelle.toString());
+                        ligneActuelle = new StringBuilder();
+                        largeurLigne = 0;
+                        espacePrefixe = 0;
+                        yCourant += fm.getHeight();
+                    }
+
+                    int xMot = x + largeurLigne + espacePrefixe;
+                    if (espacePrefixe > 0) ligneActuelle.append(" ");
+                    ligneActuelle.append(mot.texte);
+                    largeurLigne += espacePrefixe + largeurMot;
+
+                    if (mot.href != null) {
+                        liens.add(new Lien(mot.href, mot.texte, xMot, yCourant, largeurMot, fm.getHeight()));
+                    }
+                }
+                if (ligneActuelle.length() > 0) {
+                    lignes.add(ligneActuelle.toString());
+                }
+
+                boite.lignes = lignes;
+                boite.liens = liens;
+                boite.hauteur = lignes.size() * fm.getHeight();
             } else {
                 boite.hauteur = 0;
             }
         }
 
         return boite;
+    }
+
+    private static class Mot {
+        String texte;
+        String href;
+    }
+
+    private static List<Mot> extraireMots(Element element) {
+        List<Mot> mots = new ArrayList<>();
+        for (Noeud enfant : element.enfants) {
+            String href = null;
+            String texte;
+            if (enfant instanceof Element e && e.nomBalise.equals("a")) {
+                href = e.attributs.get("href");
+                texte = e.texteVisible();
+            } else if (enfant instanceof Element e) {
+                texte = e.texteVisible();
+            } else if (enfant instanceof NoeudTexte t) {
+                texte = t.texte;
+            } else {
+                continue;
+            }
+            texte = texte.trim();
+            if (texte.isEmpty()) continue;
+            for (String m : texte.split("\\s+")) {
+                Mot mot = new Mot();
+                mot.texte = m;
+                mot.href = href;
+                mots.add(mot);
+            }
+        }
+        return mots;
     }
 
     private static List<Element> enfantsBlocs(Element element) {
@@ -76,26 +140,6 @@ public class MiseEnPage {
         return resultat;
     }
 
-    private static List<String> couperEnLignes(String texte, int largeurMax, FontMetrics fm) {
-        List<String> lignes = new ArrayList<>();
-        String[] mots = texte.split(" ");
-        StringBuilder ligneActuelle = new StringBuilder();
-
-        for (String mot : mots) {
-            String essai = ligneActuelle.isEmpty() ? mot : ligneActuelle + " " + mot;
-            if (fm.stringWidth(essai) > largeurMax && !ligneActuelle.isEmpty()) {
-                lignes.add(ligneActuelle.toString());
-                ligneActuelle = new StringBuilder(mot);
-            } else {
-                ligneActuelle = new StringBuilder(essai);
-            }
-        }
-        if (!ligneActuelle.isEmpty()) {
-            lignes.add(ligneActuelle.toString());
-        }
-        return lignes;
-    }
-
     private static Font policeDepuisStyle(StyleCalcule style) {
         String taillePx = style.obtenir("font-size", "16px").replace("px", "").trim();
         int taille;
@@ -104,15 +148,9 @@ public class MiseEnPage {
         } catch (NumberFormatException e) {
             taille = 16;
         }
-
         int styleFonte = Font.PLAIN;
-        if (style.obtenir("font-weight", "normal").equals("bold")) {
-            styleFonte |= Font.BOLD;
-        }
-        if (style.obtenir("font-style", "normal").equals("italic")) {
-            styleFonte |= Font.ITALIC;
-        }
-
+        if (style.obtenir("font-weight", "normal").equals("bold")) styleFonte |= Font.BOLD;
+        if (style.obtenir("font-style", "normal").equals("italic")) styleFonte |= Font.ITALIC;
         return new Font("SansSerif", styleFonte, taille);
     }
 }

@@ -11,5 +11,6 @@ public class Boite {
     public StyleCalcule style;
     public int x, y, largeur, hauteur;
     public List<String> lignes = new ArrayList<>();
+    public List<Lien> liens = new ArrayList<>();
     public List<Boite> enfants = new ArrayList<>();
 }
