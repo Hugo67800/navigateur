@@ -10,7 +10,7 @@ public class Boite {
     public Element element;
     public StyleCalcule style;
     public int x, y, largeur, hauteur;
-    public List<String> lignes = new ArrayList<>();
-    public List<Lien> liens = new ArrayList<>();
+    public List<ElementInline> elementsLigne = new ArrayList<>();
     public List<Boite> enfants = new ArrayList<>();
+    public String puce;
 }
